@@ -8,6 +8,7 @@ class downlodController {
 
 
     static downloadPost = async (req, res) => {
+        // return res.send('hii')
         const url = "https://www.instagram.com/p/Cxao2EMMvbB/?utm_source=ig_web_copy_link"
 
 
