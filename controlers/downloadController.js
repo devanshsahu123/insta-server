@@ -4,55 +4,49 @@ import qs from "qs"
 import ejs from "ejs"
 import Cheerio from 'cheerio';
 import { gzip } from 'zlib';
+import ViewModel from '../models/viewModel.js';
 class downlodController {
+    // static downloadPost = async (req, res) => {
+    //     // return res.send('hii')
+    //     const url = "https://www.instagram.com/p/Cxao2EMMvbB/?utm_source=ig_web_copy_link"
 
 
-    static downloadPost = async (req, res) => {
-        // return res.send('hii')
-        const url = "https://www.instagram.com/p/Cxao2EMMvbB/?utm_source=ig_web_copy_link"
+    //     // Fetch the HTML content of the Instagram page
+    //     const response = await axios.get(url);
+    //     const html = response.data;
+
+    //     const regex = /"display_url":"(https:\/\/[^"]+)"/;
+    //     const match = html.match(regex);
+
+    //     console.log(match, "data")
 
 
-        // Fetch the HTML content of the Instagram page
-        const response = await axios.get(url);
-        const html = response.data;
+    //     //    return res.send(html);
+    //     return res.render('response.data')
+    //     // Extract the media URL from the HTML content
+    //     // const matches = response.data.match(/"display_url":"([^"]+)"/);
+    //     // if (!matches || matches.length < 2) {
+    //     //   throw new Error('Media URL not found on the page');
+    //     // }
 
-        const regex = /"display_url":"(https:\/\/[^"]+)"/;
-        const match = html.match(regex);
+    //     const mediaUrl = matches[1].replace(/\\u0026/g, '&'); // Handle unicode escape sequences
 
-        console.log(match, "data")
+    //     // Download the media
+    //     const mediaResponse = await axios({
+    //         method: 'get',
+    //         url: mediaUrl,
+    //         responseType: 'stream',
+    //     });
 
+    //     const fileName = 'downloaded_media.jpg'; // You can generate a unique name
+    //     const writeStream = fs.createWriteStream(fileName);
+    //     mediaResponse.data.pipe(writeStream);
 
-        //    return res.send(html);
-        return res.render('response.data')
-        // Extract the media URL from the HTML content
-        // const matches = response.data.match(/"display_url":"([^"]+)"/);
-        // if (!matches || matches.length < 2) {
-        //   throw new Error('Media URL not found on the page');
-        // }
-
-        const mediaUrl = matches[1].replace(/\\u0026/g, '&'); // Handle unicode escape sequences
-
-        // Download the media
-        const mediaResponse = await axios({
-            method: 'get',
-            url: mediaUrl,
-            responseType: 'stream',
-        });
-
-        const fileName = 'downloaded_media.jpg'; // You can generate a unique name
-        const writeStream = fs.createWriteStream(fileName);
-        mediaResponse.data.pipe(writeStream);
-
-
-
-
-
-
-        return res.send({
-            status: true,
-            msg: 'downloaded'
-        })
-    }
+    //     return res.send({
+    //         status: true,
+    //         msg: 'downloaded'
+    //     })
+    // }
 
     // static viewPost = async (req, res) => {
     //     try {
@@ -84,6 +78,24 @@ class downlodController {
 
     static viewPost = async (req, res) => {
         try {
+            const { insta } = req.body;
+
+            if (!insta) {
+                return res.send("invalid request")
+            }
+
+            const instagramUrlRegex = /^https:\/\/www\.instagram\.com\//;
+
+            if (!instagramUrlRegex.test(insta)) {
+                return res.send("invalid request 2")
+            }
+
+            const result = {
+                url: insta.split('/?')[0],
+                type: ''
+            };
+
+
             const url = 'https://vidinsta.app/web/home/fetch';
 
             const headers = {
@@ -105,17 +117,10 @@ class downlodController {
                 'x-requested-with': 'XMLHttpRequest'
             };
 
-            const data = 'url=https%3A%2F%2Fwww.instagram.com%2Freel%2FC4GRjPEvDwp&type=';
+            const response = await axios.post(url, qs.stringify(result), { headers });
 
-            axios.post(url, data, { headers })
-                .then(response => {
-                    res.send(response.data)
-                    console.log(response.data);
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-
+            await ViewModel.updateOne({ _id: '65f75cca34729e6c76b38b46' }, { $inc: { useDownload: 1 } });
+            return res.send(response.data)
         } catch (error) {
             console.log(error);
             return res.status(500).send('Internal Server Error');
